@@ -35,10 +35,7 @@
               <img src="${url}" alt="${f.name}">
               <button>Copy SREF</button>
             `;
-            div.querySelector('button').onclick = () =>
-              navigator.clipboard.writeText(url)
-                .then(()=>alert('Copied! 🚀'))
-                .catch(err=>console.error(err));
+            div.querySelector('button').onclick = () => navigator.clipboard.writeText(url);
             gallery.appendChild(div);
           }
         });
