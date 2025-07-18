@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SREF Gallery</title>
+  <style>
+    body { font-family:sans-serif; background:#f4f4f4; margin:0; padding:20px; }
+    #gallery { display:flex; flex-wrap:wrap; gap:16px; }
+    .item { background:white; padding:10px; border-radius:8px; width:200px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .item img { max-width:100%; height:auto; border-radius:4px; }
+    .item button { margin-top:8px; padding:6px 12px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1>ComfyUI SREF Gallery</h1>
+  <div id="gallery">Loading…</div>
+  <script>
+    // **CONFIG**: replace these with your own GitHub handle & repo name
+    const username = 'YOUR_GITHUB_USERNAME';
+    const repo     = 'YOUR_REPO_NAME';
+    const dir      = 'images';
+    const apiUrl   = `https://api.github.com/repos/${username}/${repo}/contents/${dir}`;
+
+    async function loadImages() {
+      try {
+        const res   = await fetch(apiUrl);
+        const files = await res.json(); // list of { name, type, download_url, ... }
+        const gallery = document.getElementById('gallery');
+        gallery.innerHTML = '';
+        files.forEach(f => {
+          if (f.type==='file' && /\.(jpe?g|png|gif)$/i.test(f.name)) {
+            const url = f.download_url;
+            const div = document.createElement('div'); div.className='item';
+            div.innerHTML = `
+              <img src="${url}" alt="${f.name}">
+              <button>Copy SREF</button>
+            `;
+            div.querySelector('button').onclick = () =>
+              navigator.clipboard.writeText(url)
+                .then(()=>alert('Copied! 🚀'))
+                .catch(err=>console.error(err));
+            gallery.appendChild(div);
+          }
+        });
+      } catch(e) {
+        document.getElementById('gallery').textContent = 'Failed to load images…';
+        console.error(e);
+      }
+    }
+    loadImages();
+  </script>
+</body>
+</html>
