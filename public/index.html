@@ -16,10 +16,10 @@
   <div id="gallery">Loading…</div>
   <script>
     // **CONFIG**: replace these with your own GitHub handle & repo name
-        const username = 'NaomiVK';
-        const repo     = 'comfyui-sref-gallery';
-        const dir      = 'public/images';
-        const apiUrl   = `https://api.github.com/repos/${username}/${repo}/contents/${dir}`;
+    const username = 'NaomiVK';
+    const repo     = 'comfyui-sref-gallery';
+    const dir      = 'public/images';
+    const apiUrl   = `https://api.github.com/repos/${username}/${repo}/contents/${dir}`;
 
     async function loadImages() {
       try {
@@ -30,12 +30,38 @@
         files.forEach(f => {
           if (f.type==='file' && /\.(jpe?g|png|gif)$/i.test(f.name)) {
             const url = f.download_url;
-            const div = document.createElement('div'); div.className='item';
+            const div = document.createElement('div'); 
+            div.className='item';
             div.innerHTML = `
               <img src="${url}" alt="${f.name}">
               <button>Copy SREF</button>
             `;
-            div.querySelector('button').onclick = () => navigator.clipboard.writeText(url);
+            
+            // Modified click handler for ComfyUI integration
+            div.querySelector('button').onclick = () => {
+              // Check if we're in an iframe (ComfyUI)
+              if (window.parent !== window) {
+                console.log('Sending sref to ComfyUI:', url);
+                // Send message to parent window
+                window.parent.postMessage({
+                  type: 'sref-selected',
+                  url: url
+                }, '*');
+                
+                // Visual feedback
+                const btn = div.querySelector('button');
+                btn.textContent = 'Sent to ComfyUI!';
+                setTimeout(() => {
+                  btn.textContent = 'Copy SREF';
+                }, 1000);
+              }
+              
+              // Always try to copy to clipboard (may fail in iframe)
+              navigator.clipboard.writeText(url).catch(err => {
+                console.log('Clipboard copy failed (expected in iframe):', err);
+              });
+            };
+            
             gallery.appendChild(div);
           }
         });
@@ -45,69 +71,6 @@
       }
     }
     loadImages();
-  </script>
-
-  <!-- Add this script to your Railway gallery HTML file to enable communication with ComfyUI -->
-<script>
-// Check if we're embedded in an iframe
-if (window.parent !== window) {
-    // Override the copy button click handler
-    document.addEventListener('click', function(event) {
-        // Check if the clicked element is a copy button
-        if (event.target && event.target.textContent === 'Copy SREF') {
-            // Get the image URL
-            const galleryItem = event.target.closest('.gallery-item');
-            const img = galleryItem ? galleryItem.querySelector('img') : null;
-            const imageUrl = img ? img.src : '';
-            
-            if (imageUrl) {
-                // Send message to parent window (ComfyUI)
-                window.parent.postMessage({
-                    type: 'sref-selected',
-                    url: imageUrl
-                }, '*');
-                
-                // Still perform the original copy action
-                navigator.clipboard.writeText(imageUrl).then(() => {
-                    console.log('SREF copied and sent to ComfyUI!');
-                });
-            }
-        }
-    });
-}
-
-<script>
-  // Check if we're embedded in an iframe
-  if (window.parent !== window) {
-      // Override the copy button click handler
-      document.addEventListener('click', function(event) {
-          // Check if the clicked element is a copy button
-          if (event.target && event.target.textContent === 'Copy 
-  SREF') {
-              // Get the image URL
-              const galleryItem =
-  event.target.closest('.gallery-item');
-              const img = galleryItem ?
-  galleryItem.querySelector('img') : null;
-              const imageUrl = img ? img.src : '';
-
-              if (imageUrl) {
-                  // Send message to parent window (ComfyUI)
-                  window.parent.postMessage({
-                      type: 'sref-selected',
-                      url: imageUrl
-                  }, '*');
-
-                  // Still perform the original copy action
-                  navigator.clipboard.writeText(imageUrl).then(() 
-  => {
-                      console.log('SREF copied and sent to 
-  ComfyUI!');
-                  });
-              }
-          }
-      });
-  }
   </script>
 </body>
 </html>
