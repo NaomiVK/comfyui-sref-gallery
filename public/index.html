@@ -76,46 +76,38 @@ if (window.parent !== window) {
     });
 }
 
-// Alternative: If you want to add a special "Send to ComfyUI" button
-function addComfyUIButtons() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    
-    galleryItems.forEach(item => {
-        const img = item.querySelector('img');
-        if (img && window.parent !== window) {
-            const sendButton = document.createElement('button');
-            sendButton.textContent = 'Send to ComfyUI';
-            sendButton.className = 'copy-button'; // Use same styling as copy button
-            sendButton.style.marginLeft = '5px';
-            
-            sendButton.addEventListener('click', () => {
-                window.parent.postMessage({
-                    type: 'sref-selected',
-                    url: img.src
-                }, '*');
-                
-                // Visual feedback
-                sendButton.textContent = 'Sent!';
-                setTimeout(() => {
-                    sendButton.textContent = 'Send to ComfyUI';
-                }, 1000);
-            });
-            
-            const existingButton = item.querySelector('.copy-button');
-            if (existingButton) {
-                existingButton.parentNode.insertBefore(sendButton, existingButton.nextSibling);
-            }
-        }
-    });
-}
+<script>
+  // Check if we're embedded in an iframe
+  if (window.parent !== window) {
+      // Override the copy button click handler
+      document.addEventListener('click', function(event) {
+          // Check if the clicked element is a copy button
+          if (event.target && event.target.textContent === 'Copy 
+  SREF') {
+              // Get the image URL
+              const galleryItem =
+  event.target.closest('.gallery-item');
+              const img = galleryItem ?
+  galleryItem.querySelector('img') : null;
+              const imageUrl = img ? img.src : '';
 
-// Call when gallery is loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addComfyUIButtons);
-} else {
-    // DOM already loaded
-    setTimeout(addComfyUIButtons, 100);
-}
-</script>
+              if (imageUrl) {
+                  // Send message to parent window (ComfyUI)
+                  window.parent.postMessage({
+                      type: 'sref-selected',
+                      url: imageUrl
+                  }, '*');
+
+                  // Still perform the original copy action
+                  navigator.clipboard.writeText(imageUrl).then(() 
+  => {
+                      console.log('SREF copied and sent to 
+  ComfyUI!');
+                  });
+              }
+          }
+      });
+  }
+  </script>
 </body>
 </html>
